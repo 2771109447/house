@@ -1,0 +1,12 @@
+com\smart\house\model\Agency.class
+com\smart\house\util\UserHelper.class
+com\smart\house\page\Pagination.class
+com\smart\house\util\Salt.class
+com\smart\house\model\UserMsg.class
+com\smart\house\model\User.class
+com\smart\house\model\HouseUser.class
+com\smart\house\page\PageData.class
+com\smart\house\model\House.class
+com\smart\house\util\ResultMsg.class
+com\smart\house\page\PageParams.class
+com\smart\house\model\Community.class

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smart.house.dao.HouseDao">
+    <sql id="houseField">
+     a.id,
+     a.type,
+     a.name,
+     a.price,
+     a.images,
+     a.area,
+     a.beds,
+     a.baths,
+     a.rating,
+     a.remarks,
+     a.properties,
+     a.floor_plan,
+     a.tags,
+     a.create_time,
+     a.city_id,
+     a.community_id,
+     a.address,
+     a.state
+   </sql>
+
+ <!--where-->
+ <sql id="houseCondition">
+  <if test="house.userId != null and house.userId != 0">
+   inner join (select house_id,user_id from house_user
+   <where>
+    user_id = #{house.userId}
+    <if test="house.bookmarked != null and house.bookmarked == true">
+     and type = 2
+    </if>
+    <if test="house.bookmarked != null and house.bookmarked == false">
+     and type =1
+    </if>
+   </where>
+   ) b
+   on a.id = b.house_id
+  </if>
+  <where>
+
+   <!-- 只显示上架的房产 -->
+   state = 1
+   <if test="house.id !=null and house.id !=0">
+    and a.id = #{house.id}
+   </if>
+   <!--   以房产类型进行查询-->
+   <if test="house.type != null">
+    and a.type = #{house.type}
+   </if>
+   <!--  以小区id进行查询-->
+ <if test="house.communityId != null" >
+  and a.community_id = #{house.communityId}
+ </if>
+ <!--  以房产名进行查询-->
+ <if test="house.name != null and house.name != '' " >
+  <bind name="pattern1" value = "'%' + house.name + '%'" />
+  and a.name like #{pattern1}
+ </if>
+<!-- 多houseId查询-->
+   <if test="house.ids != null and house.ids.size() > 0">
+    and a.id in
+    <foreach collection="house.ids" item="item" index="index" open="(" close=")" separator="," >
+     #{item}
+    </foreach>
+   </if>
+  </where>
+
+  <!-- 房产排序-->
+  <choose>
+   <when test="house.sort != null and house.sort == 'price_asc'">
+    order by a.price asc
+   </when>
+   <when test="house.sort != null and house.sort == 'price_desc'">
+    order by a.price desc
+   </when>
+   <otherwise>
+    order by a.create_time desc
+   </otherwise>
+  </choose>
+ </sql>
+
+
+
+ <!--分页查询房产-->
+ <select id="selectHouseList" resultType="house">
+  select
+  <include refid="houseField" />
+  from house a
+  <include refid="houseCondition"></include>
+
+  <if test ="pageParams.offset !=null and pageParams.limit != null">
+   limit #{pageParams.offset},#{pageParams.limit}
+  </if>
+  <if test="pageParams.offset == null and pageParams.limit != null">
+   limit #{pageParams.limit}
+  </if>
+ </select>
+
+ <!--查询房产总数-->
+ <select id="selectPageCount" resultType="Integer">
+  select count(id)
+  from house a
+  <include refid="houseCondition"></include>
+ </select>
+<!--查询小区-->
+ <select id="selectCommunity" resultType="community">
+  select *
+ from community
+ <where>
+  <if test="id != null and id != 0">
+   and id = #{id}
+  </if>
+  <if test="name != null and name != ''">
+   and name = #{name}
+  </if>
+ </where>
+ </select>
+ <!--查询房产拥有者-->
+ <select id="selectHouseUser" resultType="houseUser">
+     select id,house_id,user_id,create_time,type
+     from house_user
+  <where>
+   <if test="id != null and id != 0">
+    and house_id = #{id}
+   </if>
+
+   <if test="userId != null and userId != ''">
+    and user_id = #{userId}
+   </if>
+
+  </where>
+   </select>
+<!--添加用户留言-->
+ <insert id="addHouseMsg">
+     insert into user_msg (
+                     msg,
+                     create_time,
+                     user_name,
+                     house_id,
+                     agent_id
+                     )
+                     value(
+                      #{msg},
+                      #{createTime},
+                      #{userName},
+                      #{houseId},
+                      #{agentId}
+                     )
+    </insert>
+
+</mapper>
